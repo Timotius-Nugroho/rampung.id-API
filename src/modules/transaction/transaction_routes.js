@@ -4,6 +4,11 @@ const transactionController = require('./transaction_controller')
 const authMiddleware = require('../../middleware/auth')
 
 Route.get('/', authMiddleware.authentication, transactionController.getHistory)
+Route.get(
+  '/balance',
+  authMiddleware.authentication,
+  transactionController.getUserBalance
+)
 Route.post(
   '/',
   authMiddleware.authentication,

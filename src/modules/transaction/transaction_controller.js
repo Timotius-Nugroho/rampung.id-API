@@ -3,6 +3,16 @@ const bcrypt = require('bcrypt')
 const transactionModel = require('./transaction_model')
 
 module.exports = {
+  getUserBalance: async (req, res) => {
+    try {
+      const userId = req.decodeToken.user_id
+      const result = await transactionModel.getBalance(userId)
+      return helper.response(res, 200, 'succes get user balance', result)
+    } catch (error) {
+      return helper.response(res, 400, 'Bad Request', error)
+    }
+  },
+
   getHistory: async (req, res) => {
     try {
       const userId = req.decodeToken.user_id
@@ -34,7 +44,7 @@ module.exports = {
       }
       return helper.response(res, 200, 'Succes get transaction data !', result)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
       return helper.response(res, 400, 'Bad Request', error)
     }
   },
