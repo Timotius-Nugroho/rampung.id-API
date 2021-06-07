@@ -37,8 +37,11 @@ module.exports = {
       )
       for (const e of result) {
         if (!e.transaction_method) {
-          e.receiverDetail = await transactionModel.getReciverDetail(
+          e.receiverDetail = await transactionModel.getUserDetail(
             e.transaction_receiver_id
+          )
+          e.senderDetail = await transactionModel.getUserDetail(
+            e.transaction_sender_id
           )
         }
       }

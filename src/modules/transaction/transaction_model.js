@@ -65,7 +65,7 @@ module.exports = {
     })
   },
 
-  getReciverDetail: (id) => {
+  getUserDetail: (id) => {
     return new Promise((resolve, reject) => {
       connection.query(
         'SELECT user_email, user_phone, user_name, user_image FROM user WHERE user_id = ?',
