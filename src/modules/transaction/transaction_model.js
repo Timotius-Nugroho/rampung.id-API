@@ -52,7 +52,7 @@ module.exports = {
   getTransaction: (id, condition, limit) => {
     return new Promise((resolve, reject) => {
       connection.query(
-        `SELECT * FROM transaction WHERE (transaction_sender_id = ? OR transaction_receiver_id = ?)${condition} LIMIT ?`,
+        `SELECT * FROM transaction WHERE (transaction_sender_id = ? OR transaction_receiver_id = ?)${condition} ORDER BY transaction_id DESC LIMIT ?`,
         [id, id, limit],
         (error, result) => {
           if (!error) {

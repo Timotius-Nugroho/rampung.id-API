@@ -99,6 +99,41 @@ module.exports = {
     }
   },
 
+  userDeleteProfile: async (req, res) => {
+    try {
+      const id = req.decodeToken.user_id
+      const checkUser = await userModel.getDataById(id)
+
+      if (checkUser.length === 0) {
+        return helper.response(
+          res,
+          404,
+          `cannot delete profile, data by id ${id} not found !`,
+          null
+        )
+      }
+
+      if (checkUser[0].user_image.length > 0) {
+        console.log(`Delete Image${checkUser[0].user_image}`)
+        const imgLoc = `src/uploads/${checkUser[0].user_image}`
+        helper.deleteImage(imgLoc)
+      } else {
+        return helper.response(
+          res,
+          404,
+          'cannot delete profile, user has no image !',
+          null
+        )
+      }
+
+      const result = await userModel.updateData({ user_image: '' }, id)
+      return helper.response(res, 200, 'Succes delete photo profile !', result)
+    } catch (error) {
+      // console.log(error)
+      return helper.response(res, 400, 'Bad Request', error)
+    }
+  },
+
   updatePin: async (req, res) => {
     try {
       const userId = req.decodeToken.user_id

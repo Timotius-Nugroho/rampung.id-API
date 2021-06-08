@@ -17,6 +17,11 @@ Route.patch(
   userController.updateProfile
 )
 Route.patch(
+  '/delete-photo',
+  authMiddleware.authentication,
+  userController.userDeleteProfile
+)
+Route.patch(
   '/update-pin',
   authMiddleware.authentication,
   userController.updatePin
