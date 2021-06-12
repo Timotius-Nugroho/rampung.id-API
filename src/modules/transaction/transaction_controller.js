@@ -52,6 +52,33 @@ module.exports = {
     }
   },
 
+  getTransactionSummary: async (req, res) => {
+    try {
+      const userId = req.decodeToken.user_id
+      const transactionPerDay =
+        await transactionModel.getTotalTransactionPerDay(userId)
+      const amountIn = await transactionModel.getTotalAmountIn(userId)
+      const amountOut = await transactionModel.getTotalAmountOut(userId)
+
+      const result = {
+        transactionPerDay:
+          transactionPerDay.length > 0 ? transactionPerDay : null,
+        amountIn: amountIn.length > 0 ? amountIn[0].total_amount : 0,
+        amountOut: amountOut.length > 0 ? amountOut[0].total_amount : 0
+      }
+      // console.log(result)
+      return helper.response(
+        res,
+        200,
+        'Succes get transaction Summary !',
+        result
+      )
+    } catch (error) {
+      console.log(error)
+      return helper.response(res, 400, 'Bad Request', error)
+    }
+  },
+
   transferMoney: async (req, res) => {
     try {
       // console.log(req.body)
@@ -61,6 +88,7 @@ module.exports = {
       transactionAmount = parseInt(transactionAmount) || 0
 
       if (transactionMethod) {
+        // top up here
         let userBalance = await transactionModel.getBalance(
           req.decodeToken.user_id
         )

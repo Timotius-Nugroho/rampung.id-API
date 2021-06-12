@@ -9,6 +9,11 @@ Route.get(
   authMiddleware.authentication,
   transactionController.getUserBalance
 )
+Route.get(
+  '/summary',
+  authMiddleware.authentication,
+  transactionController.getTransactionSummary
+)
 Route.post(
   '/',
   authMiddleware.authentication,
