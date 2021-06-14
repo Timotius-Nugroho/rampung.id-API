@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+        padding-left: 30px;
+      }
+      .title {
+        font-size: 30px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 80px;
+        margin-top: 70px;
+      }
+      .info {
+        font-size: 14px;
+        color: #7a7886;
+      }
+      .desc {
+        font-size: 16px;
+        margin-top: -10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <p class="title">Transfer Succes</p>
+      <p class="info">Sender</p>
+      <p class="desc"><%= result.senderName %></p>
+      <p class="info">Receiver</p>
+      <p class="desc"><%= result.receiverName %></p>
+      <p class="info">Amount</p>
+      <p class="desc"><%= result.amount %></p>
+      <p class="info">Balance left</p>
+      <p class="desc"><%= result.balance %></p>
+      <p class="info">Date & Time</p>
+      <p class="desc"><%= result.date %></p>
+      <p class="info">Notes</p>
+      <p class="desc"><%= result.note %></p>
+    </div>
+  </body>
+</html>

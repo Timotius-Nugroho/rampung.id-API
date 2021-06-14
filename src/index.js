@@ -23,6 +23,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use('/backend4/api/v1', routerNavigation)
 app.use('/backend4/api', express.static('src/uploads'))
+app.use('/backend4/api', express.static('public/transfer'))
 
 app.listen(port, () => {
   console.log(`Express app is listen on port ${port} !`)

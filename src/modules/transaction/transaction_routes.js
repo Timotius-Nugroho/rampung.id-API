@@ -14,6 +14,7 @@ Route.get(
   authMiddleware.authentication,
   transactionController.getTransactionSummary
 )
+Route.post('/export/:id', transactionController.exportTransaction)
 Route.post(
   '/',
   authMiddleware.authentication,

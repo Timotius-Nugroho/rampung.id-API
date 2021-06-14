@@ -4,12 +4,8 @@ const userController = require('./user_controller')
 const authMiddleware = require('../../middleware/auth')
 const uploadFile = require('../../middleware/upload')
 
-Route.get('/', authMiddleware.authentication, userController.getAllUser)
-Route.get(
-  '/by-id/:id',
-  authMiddleware.authentication,
-  userController.getUserById
-)
+Route.get('/', userController.getAllUser)
+Route.get('/by-id/:id', userController.getUserById)
 Route.patch(
   '/update-profile',
   authMiddleware.authentication,

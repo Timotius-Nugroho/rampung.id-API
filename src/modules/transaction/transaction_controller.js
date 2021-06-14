@@ -1,5 +1,8 @@
 const helper = require('../../helpers')
 const bcrypt = require('bcrypt')
+const ejs = require('ejs')
+const pdf = require('html-pdf')
+const path = require('path')
 const transactionModel = require('./transaction_model')
 
 module.exports = {
@@ -145,6 +148,64 @@ module.exports = {
         })
         return helper.response(res, 200, 'Transaction succes !', result)
       }
+    } catch (error) {
+      return helper.response(res, 400, 'Bad Request', error)
+    }
+  },
+
+  exportTransaction: async (req, res) => {
+    try {
+      const { id } = req.params
+      const fileName = `${id}.pdf`
+      const result = {
+        ...req.body,
+        date: Date(Date.now()).toString()
+      }
+
+      ejs.renderFile(
+        path.join(__dirname, '../../templates', 'transaction-template.ejs'),
+        { result: result },
+        (err, data) => {
+          if (err) {
+            return helper.response(res, 400, 'Failed Export Transaction', err)
+          } else {
+            const options = {
+              height: '11.25in',
+              width: '8.5in',
+              header: {
+                height: '20mm'
+              },
+              footer: {
+                height: '20mm'
+              }
+            }
+            pdf
+              .create(data, options)
+              .toFile(
+                path.join(__dirname, '../../../public/transfer/', fileName),
+                function (err, data) {
+                  if (err) {
+                    return helper.response(
+                      res,
+                      400,
+                      'Failed Export Transaction',
+                      err
+                    )
+                  } else {
+                    return helper.response(
+                      res,
+                      200,
+                      'Success Export File Transaction',
+                      {
+                        url: `http://localhost:3004/backend4/api/${fileName}`
+                      }
+                    )
+                  }
+                }
+              )
+          }
+        }
+      )
     } catch (error) {
       return helper.response(res, 400, 'Bad Request', error)
     }
