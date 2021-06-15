@@ -1,4 +1,5 @@
 const connection = require('../../config/mysql')
+const midtransClient = require('midtrans-client')
 
 module.exports = {
   getUserPin: (id) => {
@@ -68,7 +69,7 @@ module.exports = {
   getTotalTransactionPerDay: (id) => {
     return new Promise((resolve, reject) => {
       connection.query(
-        'SELECT DAYNAME(transaction_created_at) AS day_name, SUM(transaction_amount) AS total_amount FROM transaction WHERE (transaction_sender_id = ? OR transaction_receiver_id = ?) GROUP BY DAYNAME(transaction_created_at)',
+        'SELECT DAYNAME(transaction_created_at) AS day_name, SUM(transaction_amount) AS total_amount FROM transaction WHERE (transaction_sender_id = ? OR transaction_receiver_id = ?) AND WEEK(transaction_created_at) = WEEK(NOW()) GROUP BY DAYNAME(transaction_created_at)',
         [id, id],
         (error, result) => {
           if (!error) {
@@ -144,6 +145,38 @@ module.exports = {
           }
         }
       )
+    })
+  },
+
+  createTopup: ({ topupId, topupAmount }) => {
+    return new Promise((resolve, reject) => {
+      const snap = new midtransClient.Snap({
+        isProduction: false,
+        serverKey: 'SB-Mid-server-vjEJqGa3Jq0x9DtGLX-WcsTA',
+        clientKey: 'SB-Mid-client-fRU8uSNEVuGcFfR8'
+      })
+      const parameter = {
+        transaction_details: {
+          order_id: topupId,
+          gross_amount: topupAmount
+        },
+        credit_card: {
+          secure: true
+        }
+      }
+      snap
+        .createTransaction(parameter)
+        .then((transaction) => {
+          // transaction token
+          // const transactionToken = transaction.token
+          // console.log('transaction:', transaction)
+          // console.log('transactionToken:', transactionToken)
+          resolve(transaction.redirect_url)
+        })
+        .catch((error) => {
+          console.log(error)
+          reject(error)
+        })
     })
   }
 }

@@ -20,5 +20,11 @@ Route.post(
   authMiddleware.authentication,
   transactionController.transferMoney
 )
+Route.post(
+  '/topup',
+  authMiddleware.authentication,
+  transactionController.postTopUp
+)
+Route.post('/midtrans-notification', transactionController.postMidtransNotif)
 
 module.exports = Route

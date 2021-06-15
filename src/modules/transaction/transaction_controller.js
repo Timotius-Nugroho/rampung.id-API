@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt')
 const ejs = require('ejs')
 const pdf = require('html-pdf')
 const path = require('path')
+const midtransClient = require('midtrans-client')
 const transactionModel = require('./transaction_model')
 
 module.exports = {
@@ -105,7 +106,7 @@ module.exports = {
           transaction_method: transactionMethod,
           transaction_receiver_id: req.decodeToken.user_id,
           transaction_amount: transactionAmount,
-          transaction_status: 1
+          transaction_status: 'succes'
         })
         return helper.response(res, 200, 'Top up succes !', result)
       } else {
@@ -144,7 +145,7 @@ module.exports = {
           transaction_sender_id: senderId,
           transaction_receiver_id: receiverId,
           transaction_amount: transactionAmount,
-          transaction_status: 1
+          transaction_status: 'succes'
         })
         return helper.response(res, 200, 'Transaction succes !', result)
       }
@@ -206,6 +207,90 @@ module.exports = {
           }
         }
       )
+    } catch (error) {
+      return helper.response(res, 400, 'Bad Request', error)
+    }
+  },
+
+  postTopUp: async (req, res) => {
+    try {
+      console.log(req.body)
+
+      let { transactionAmount } = req.body
+      const userId = req.decodeToken.user_id
+      transactionAmount = parseInt(transactionAmount) || 0
+
+      const result = await transactionModel.addTransaction({
+        transaction_method: 'Midtrans',
+        transaction_receiver_id: userId,
+        transaction_amount: transactionAmount,
+        transaction_status: 'pending'
+      })
+      // console.log('RES', result)
+
+      const topupData = {
+        topupId: result.id,
+        topupAmount: result.transaction_amount
+      }
+      const topup = await transactionModel.createTopup(topupData)
+      return helper.response(res, 200, 'Success TopUp Please Confirm ...', {
+        redirectUrl: topup
+      })
+    } catch (error) {
+      return helper.response(res, 400, 'Bad Request', error)
+    }
+  },
+
+  postMidtransNotif: async (req, res) => {
+    try {
+      console.log(req.body)
+      const snap = new midtransClient.Snap({
+        isProduction: false,
+        serverKey: 'SB-Mid-server-KItkJVnyFsZRa-JD5HL_x_DC',
+        clientKey: 'SB-Mid-client-lyiBVkXY-ImOkiuQ'
+      })
+      snap.transaction.notification(req.body).then((statusResponse) => {
+        const orderId = statusResponse.order_id
+        const transactionStatus = statusResponse.transaction_status
+        const fraudStatus = statusResponse.fraud_status
+        // console.log(statusResponse)
+
+        console.log(
+          `Transaction notification received. Order ID: ${orderId}. Transaction status: ${transactionStatus}. Fraud status: ${fraudStatus}`
+        )
+
+        // Sample transactionStatus handling logic
+
+        if (transactionStatus === 'capture') {
+          // capture only applies to card transaction, which you need to check for the fraudStatus
+          if (fraudStatus === 'challenge') {
+            // TODO set transaction status on your databaase to 'challenge'
+          } else if (fraudStatus === 'accept') {
+            // TODO set transaction status on your databaase to 'success'
+            // [1] MENJALANKAN MODEL UNTUK GET DATA DARI TABLE BALANCE SUPAYA MENDAPATKAN USERID & TOPUPAMOUNT BERDASARKAN TOPUPID(ORDERID)
+            // [2] MENJALANKAN MODEL UNTUK MENGUPDATE STATUS TOPUP BERDASARKAN TOPUPID(ORDERID)
+            // [3] MENJALANKAN MODEL UNTUK MENGUPDATE DATA BALANCE
+          }
+        } else if (transactionStatus === 'settlement') {
+          // TODO set transaction status on your databaase to 'success'
+          // [1] MENJALANKAN MODEL UNTUK GET DATA DARI TABLE BALANCE SUPAYA MENDAPATKAN USERID & TOPUPAMOUNT BERDASARKAN TOPUPID(ORDERID)
+          // [2] MENJALANKAN MODEL UNTUK MENGUPDATE STATUS TOPUP BERDASARKAN TOPUPID(ORDERID)
+          // [3] MENJALANKAN MODEL UNTUK MENGUPDATE DATA BALANCE
+          // await updateBalance(userId, topupAmount)
+        } else if (transactionStatus === 'deny') {
+          // TODO you can ignore 'deny', because most of the time it allows payment retries
+          // and later can become success
+        } else if (
+          transactionStatus === 'cancel' ||
+          transactionStatus === 'expire'
+        ) {
+          // TODO set transaction status on your databaase to 'failure'
+          // [2] MENJALANKAN MODEL UNTUK MENGUPDATE STATUS TOPUP BERDASARKAN TOPUPID(ORDERID)
+        } else if (transactionStatus === 'pending') {
+          // TODO set transaction status on your databaase to 'pending' / waiting payment
+          // [2] MENJALANKAN MODEL UNTUK MENGUPDATE STATUS TOPUP BERDASARKAN TOPUPID(ORDERID)
+        }
+      })
     } catch (error) {
       return helper.response(res, 400, 'Bad Request', error)
     }
