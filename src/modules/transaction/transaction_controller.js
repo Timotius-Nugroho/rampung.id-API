@@ -243,54 +243,92 @@ module.exports = {
 
   postMidtransNotif: async (req, res) => {
     try {
-      console.log(req.body)
+      // console.log(req.body)
+
       const snap = new midtransClient.Snap({
         isProduction: false,
-        serverKey: 'SB-Mid-server-KItkJVnyFsZRa-JD5HL_x_DC',
-        clientKey: 'SB-Mid-client-lyiBVkXY-ImOkiuQ'
+        serverKey: 'SB-Mid-server-vjEJqGa3Jq0x9DtGLX-WcsTA',
+        clientKey: 'SB-Mid-client-fRU8uSNEVuGcFfR8'
       })
-      snap.transaction.notification(req.body).then((statusResponse) => {
-        const orderId = statusResponse.order_id
-        const transactionStatus = statusResponse.transaction_status
-        const fraudStatus = statusResponse.fraud_status
-        // console.log(statusResponse)
+      snap.transaction
+        .notification(req.body)
+        .then((statusResponse) => {
+          const orderId = statusResponse.order_id
+          const transactionStatus = statusResponse.transaction_status
+          const fraudStatus = statusResponse.fraud_status
+          // console.log(grossAmount)
 
-        console.log(
-          `Transaction notification received. Order ID: ${orderId}. Transaction status: ${transactionStatus}. Fraud status: ${fraudStatus}`
-        )
-
-        // Sample transactionStatus handling logic
-
-        if (transactionStatus === 'capture') {
-          // capture only applies to card transaction, which you need to check for the fraudStatus
-          if (fraudStatus === 'challenge') {
-            // TODO set transaction status on your databaase to 'challenge'
-          } else if (fraudStatus === 'accept') {
-            // TODO set transaction status on your databaase to 'success'
-            // [1] MENJALANKAN MODEL UNTUK GET DATA DARI TABLE BALANCE SUPAYA MENDAPATKAN USERID & TOPUPAMOUNT BERDASARKAN TOPUPID(ORDERID)
-            // [2] MENJALANKAN MODEL UNTUK MENGUPDATE STATUS TOPUP BERDASARKAN TOPUPID(ORDERID)
-            // [3] MENJALANKAN MODEL UNTUK MENGUPDATE DATA BALANCE
+          const updateStatus = async () => {
+            await transactionModel.updateTransaction(
+              {
+                transaction_status: transactionStatus
+              },
+              orderId
+            )
+            return helper.response(res, 200, `Top Up ${transactionStatus} !`)
           }
-        } else if (transactionStatus === 'settlement') {
-          // TODO set transaction status on your databaase to 'success'
-          // [1] MENJALANKAN MODEL UNTUK GET DATA DARI TABLE BALANCE SUPAYA MENDAPATKAN USERID & TOPUPAMOUNT BERDASARKAN TOPUPID(ORDERID)
-          // [2] MENJALANKAN MODEL UNTUK MENGUPDATE STATUS TOPUP BERDASARKAN TOPUPID(ORDERID)
-          // [3] MENJALANKAN MODEL UNTUK MENGUPDATE DATA BALANCE
-          // await updateBalance(userId, topupAmount)
-        } else if (transactionStatus === 'deny') {
-          // TODO you can ignore 'deny', because most of the time it allows payment retries
-          // and later can become success
-        } else if (
-          transactionStatus === 'cancel' ||
-          transactionStatus === 'expire'
-        ) {
-          // TODO set transaction status on your databaase to 'failure'
-          // [2] MENJALANKAN MODEL UNTUK MENGUPDATE STATUS TOPUP BERDASARKAN TOPUPID(ORDERID)
-        } else if (transactionStatus === 'pending') {
-          // TODO set transaction status on your databaase to 'pending' / waiting payment
-          // [2] MENJALANKAN MODEL UNTUK MENGUPDATE STATUS TOPUP BERDASARKAN TOPUPID(ORDERID)
-        }
-      })
+
+          const asyncCall = async () => {
+            await transactionModel.updateTransaction(
+              {
+                transaction_status: transactionStatus
+              },
+              orderId
+            )
+            const orderInfo = await transactionModel.getTransactionById(orderId)
+
+            let userBalance = await transactionModel.getBalance(
+              orderInfo[0].transaction_receiver_id
+            )
+            userBalance += orderInfo[0].transaction_amount
+            await transactionModel.updateBalance(
+              { balance: userBalance },
+              orderInfo[0].transaction_receiver_id
+            )
+            return helper.response(res, 200, 'Top up Approved !', userBalance)
+          }
+
+          console.log(
+            `Transaction notification received. Order ID: ${orderId}. Transaction status: ${transactionStatus}. Fraud status: ${fraudStatus}`
+          )
+
+          // Sample transactionStatus handling logic
+
+          if (transactionStatus === 'capture') {
+            updateStatus()
+            if (fraudStatus === 'challenge') {
+              // TODO set transaction status on your databaase to 'challenge'
+              updateStatus()
+            } else if (fraudStatus === 'accept') {
+              asyncCall()
+            }
+          } else if (transactionStatus === 'settlement') {
+            // TODO set transaction status on your databaase to 'success'
+            asyncCall()
+          } else if (transactionStatus === 'deny') {
+            // TODO you can ignore 'deny', because most of the time it allows payment retries
+            // and later can become success
+            updateStatus()
+          } else if (
+            transactionStatus === 'cancel' ||
+            transactionStatus === 'expire'
+          ) {
+            // TODO set transaction status on your databaase to 'failure'
+            updateStatus()
+          } else if (transactionStatus === 'pending') {
+            // TODO set transaction status on your databaase to 'pending' / waiting payment
+            updateStatus()
+          }
+        })
+        .catch((err) => {
+          console.log('Midtrans error', err)
+          return helper.response(
+            res,
+            parseInt(err.ApiResponse.status_code),
+            err.ApiResponse.status_message,
+            null
+          )
+        })
     } catch (error) {
       return helper.response(res, 400, 'Bad Request', error)
     }

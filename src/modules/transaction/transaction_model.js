@@ -66,10 +66,46 @@ module.exports = {
     })
   },
 
+  updateTransaction: (setData, id) => {
+    return new Promise((resolve, reject) => {
+      connection.query(
+        'UPDATE transaction SET ? WHERE transaction_id = ?',
+        [setData, id],
+        (error, result) => {
+          if (!error) {
+            const newResult = {
+              id: id,
+              ...setData
+            }
+            resolve(newResult)
+          } else {
+            reject(new Error(error))
+          }
+        }
+      )
+    })
+  },
+
+  getTransactionById: (id) => {
+    return new Promise((resolve, reject) => {
+      connection.query(
+        'SELECT transaction_receiver_id, transaction_amount FROM transaction WHERE transaction_id = ?',
+        id,
+        (error, result) => {
+          if (!error) {
+            resolve(result)
+          } else {
+            reject(new Error(error))
+          }
+        }
+      )
+    })
+  },
+
   getTotalTransactionPerDay: (id) => {
     return new Promise((resolve, reject) => {
       connection.query(
-        'SELECT DAYNAME(transaction_created_at) AS day_name, SUM(transaction_amount) AS total_amount FROM transaction WHERE (transaction_sender_id = ? OR transaction_receiver_id = ?) AND WEEK(transaction_created_at) = WEEK(NOW()) GROUP BY DAYNAME(transaction_created_at)',
+        'SELECT DAYNAME(transaction_created_at) AS day_name, SUM(transaction_amount) AS total_amount FROM transaction WHERE (transaction_sender_id = ? OR transaction_receiver_id = ?) AND (transaction_status = "settlement" OR transaction_status = "succes") AND WEEK(transaction_created_at) = WEEK(NOW()) GROUP BY DAYNAME(transaction_created_at)',
         [id, id],
         (error, result) => {
           if (!error) {
