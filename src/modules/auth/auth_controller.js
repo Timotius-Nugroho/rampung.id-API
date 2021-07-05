@@ -28,7 +28,7 @@ module.exports = {
         delete result.user_password
         await authModel.addBalance({ user_id: result.id, balance: 0 })
 
-        const url = `http://localhost:3004/backend4/api/v1/auth/change-data/${result.id}`
+        const url = `https://pacific-bastion-76713.herokuapp.com/backend4/api/v1/auth/change-data/${result.id}`
         helper.sendMail('Please activate your account', url, userEmail)
 
         return helper.response(
@@ -151,7 +151,7 @@ module.exports = {
           expiresIn: '1h'
         })
 
-        const url = `http://localhost:3004/backend4/api/v1/auth/change-data/${token}`
+        const url = `https://pacific-bastion-76713.herokuapp.com/backend4/api/v1/auth/change-data/${token}`
 
         // send email for verificatioan here
         helper.sendMail('Confirm your change password', url, req.body.userEmail)

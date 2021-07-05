@@ -198,7 +198,7 @@ module.exports = {
                       200,
                       'Success Export File Transaction',
                       {
-                        url: `http://localhost:3004/backend4/api/${fileName}`
+                        url: `https://pacific-bastion-76713.herokuapp.com/api/${fileName}`
                       }
                     )
                   }
