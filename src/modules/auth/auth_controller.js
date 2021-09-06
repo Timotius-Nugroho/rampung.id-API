@@ -28,7 +28,7 @@ module.exports = {
         delete result.user_password
         await authModel.addBalance({ user_id: result.id, balance: 0 })
 
-        const url = `https://pacific-bastion-76713.herokuapp.com/backend4/api/v1/auth/change-data/${result.id}`
+        const url = `https://dompetmu-api.herokuapp.com/backend4/api/v1/auth/change-data/${result.id}`
         helper.sendMail('Please activate your account', url, userEmail)
 
         return helper.response(
@@ -41,6 +41,7 @@ module.exports = {
         return helper.response(res, 400, 'Email has been registered')
       }
     } catch (error) {
+      console.log(error)
       return helper.response(res, 400, 'Bad Request', error)
     }
   },
@@ -83,7 +84,7 @@ module.exports = {
         return helper.response(res, 404, 'Email not Registerd')
       }
     } catch (error) {
-      // console.log(error)
+      console.log(error)
       return helper.response(res, 400, 'Bad Request', error)
     }
   },
@@ -151,7 +152,7 @@ module.exports = {
           expiresIn: '1h'
         })
 
-        const url = `https://pacific-bastion-76713.herokuapp.com/backend4/api/v1/auth/change-data/${token}`
+        const url = `https://dompetmu-api.herokuapp.com/backend4/api/v1/auth/change-data/${token}`
 
         // send email for verificatioan here
         helper.sendMail('Confirm your change password', url, req.body.userEmail)
