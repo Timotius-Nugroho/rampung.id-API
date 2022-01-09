@@ -9,7 +9,7 @@ const bodyParser = require('body-parser')
 const routerNavigation = require('./routes')
 
 const app = express()
-const port = process.env.PORT || 3004
+const port = process.env.PORT || 3000
 
 app.use(morgan('dev'))
 app.use(cors())
@@ -21,9 +21,8 @@ app.use(compression())
 app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
-app.use('/backend4/api/v1', routerNavigation)
-app.use('/backend4/api', express.static('src/uploads'))
-app.use('/backend4/api', express.static('public/transfer'))
+app.use('/', routerNavigation)
+app.use('/file', express.static('src/uploads'))
 
 app.listen(port, () => {
   console.log(`Express app is listen on port ${port} !`)
