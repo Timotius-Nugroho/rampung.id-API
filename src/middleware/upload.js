@@ -25,8 +25,8 @@ const fileFilter = (req, file, callback) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 600 * 600 }
-}).single('image')
+  limits: { fileSize: 1000 * 1000 }
+}).fields([{ name: 'image', maxCount: 10 }])
 
 const uploadFilter = (req, res, next) => {
   upload(req, res, function (err) {

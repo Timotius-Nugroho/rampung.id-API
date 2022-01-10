@@ -74,13 +74,14 @@ module.exports = {
       for (const [key, value] of Object.entries(req.body)) {
         setData[helper.convertToSnakeCase(key)] = value
       }
-      setData.user_image = req.file
-        ? `${process.env.FRONTEND_URL}/file/${req.file.filename}`
+
+      setData.user_image = req.files.image[0]
+        ? `${process.env.FRONTEND_URL}/file/${req.files.image[0].filename}`
         : checkUser[0].user_image
       setData.user_updated_at = new Date(Date.now())
       // console.log(setData)
 
-      if (req.file) {
+      if (req.files.image[0]) {
         if (checkUser[0].user_image.length > 0) {
           const imgLoc = `src/uploads/${
             checkUser[0].user_image.split('/file/')[1]
@@ -94,7 +95,7 @@ module.exports = {
       const result = await userModel.updateData(setData, id)
       return helper.response(res, 200, 'Succes update data !', result)
     } catch (error) {
-      // console.log(error)
+      console.log(error)
       return helper.response(res, 400, 'Bad Request', error)
     }
   },
