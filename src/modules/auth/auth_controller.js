@@ -7,16 +7,14 @@ require('dotenv').config()
 module.exports = {
   register: async (req, res) => {
     try {
-      const { userEmail, userPassword, userName, userPhone } = req.body
+      const { userEmail, userPassword, userName } = req.body
       const salt = bcrypt.genSaltSync(10)
       const encryptPassword = bcrypt.hashSync(userPassword, salt)
 
       const setData = {
         user_name: userName,
         user_email: userEmail,
-        user_password: encryptPassword,
-        user_phone: userPhone,
-        user_verification: 0
+        user_password: encryptPassword
       }
 
       const checkEmailUser = await authModel.getDataCondition({
@@ -26,17 +24,10 @@ module.exports = {
       if (checkEmailUser.length === 0) {
         const result = await authModel.register(setData)
         delete result.user_password
-        await authModel.addBalance({ user_id: result.id, balance: 0 })
 
-        const url = `https://dompetmu-api.herokuapp.com/backend4/api/v1/auth/change-data/${result.id}`
-        helper.sendMail('Please activate your account', url, userEmail)
+        helper.sendMail('Your Account is ready', false, userEmail)
 
-        return helper.response(
-          res,
-          200,
-          'Succes register User Please Check your Email to Activate your Account !',
-          result
-        )
+        return helper.response(res, 200, 'Succes register User !', result)
       } else {
         return helper.response(res, 400, 'Email has been registered')
       }
@@ -55,10 +46,6 @@ module.exports = {
       })
 
       if (checkEmailUser.length > 0) {
-        if (checkEmailUser[0].user_verification === 0) {
-          return helper.response(res, 403, 'Account is not verified')
-        }
-
         const checkPassword = bcrypt.compareSync(
           userPassword,
           checkEmailUser[0].user_password
@@ -67,8 +54,8 @@ module.exports = {
         if (checkPassword) {
           const payload = {
             user_id: checkEmailUser[0].user_id,
-            user_email: checkEmailUser[0].user_email,
-            user_pin: checkEmailUser[0].user_pin.length
+            user_role: checkEmailUser[0].user_role,
+            user_email: checkEmailUser[0].user_email
           }
           delete payload.user_password
           const token = jwt.sign({ ...payload }, process.env.PRIVATE_KEY, {
@@ -152,7 +139,7 @@ module.exports = {
           expiresIn: '1h'
         })
 
-        const url = `https://dompetmu-api.herokuapp.com/backend4/api/v1/auth/change-data/${token}`
+        const url = `${process.env.FRONTEND_URL}/auth/change-data/${token}`
 
         // send email for verificatioan here
         helper.sendMail('Confirm your change password', url, req.body.userEmail)

@@ -34,10 +34,15 @@ module.exports = {
     })
 
     const mailOptions = {
-      from: `"dompetMu >> " <${process.env.SMTP_EMAIL}>`,
+      from: `"Rampung.id >> " <${process.env.SMTP_EMAIL}>`,
       to: userEmailAddress,
-      subject: `dompetMu - ${msg}`,
-      html: `<b>Click Here to activate</b><a href=${url}>Click !</>`
+      subject: `Rampung.id - ${msg}`,
+      html: `${
+        url
+          ? `<b>Click Here to activate</b><a href=${url}>Click !</>`
+          : `<b>
+      Thank you for register at Rampung.id</>`
+      }`
     }
 
     transporter.sendMail(mailOptions, function (error, info) {
